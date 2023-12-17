@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 import os 
 import webbrowser 
 import pyperclip
+import threading
 
 def createToolTip(widget, text):
     try:
@@ -44,84 +45,77 @@ class App(TKMT.ThemedTKinterFrame):
             self.master.iconbitmap('Word Counter Master.ico')
             self.master.resizable(False, False)
 
-            # 创建一个主框架，用于包含所有的小部件
             self.main_frame = ttk.Frame(self.master)
             self.main_frame.grid(row=0, column=0, sticky="nsew")
 
-            # 创建一个左侧框架，用于显示工具按钮
             self.left_frame = ttk.Frame(self.main_frame, width=200, height=400)
             self.left_frame.grid(row=0, column=0, padx=10, pady=5, sticky="ns")
 
-            # 创建一个右侧框架，用于显示文本输入和计数标签
             self.right_frame = ttk.Frame(self.main_frame)
             self.right_frame.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
 
-            # 在右侧框架中创建一个文本输入框
             self.text_input = tk.Text(self.right_frame, font=("Arial", 12))
             self.text_input.grid(row=0, column=0, sticky="nsew")
             createToolTip(self.text_input, "Enter the text you want to count here")
             self.text_input.bind("<KeyRelease>", self.count_words)
 
-            # 在右侧框架中创建一个滚动条，与文本输入框关联
             self.scrollbar = ttk.Scrollbar(self.right_frame, orient="vertical", command=self.text_input.yview)
             self.scrollbar.grid(row=0, column=1, sticky="ns")
             self.text_input.config(yscrollcommand=self.scrollbar.set)
 
-            # 在右侧框架中创建一个计数标签，用于显示各种计数
             self.label_count = ttk.Label(self.right_frame, text="", font=("Arial", 10))
             createToolTip(self.label_count, "This displays the word count")
             self.label_count.grid(row=1, column=0, sticky="ns")
             self.count_words()
 
-            # 在左侧框架中创建一个打开文件按钮
-            self.open_button = ttk.Button(self.left_frame, text="Open File", command=self.open_file)
+            self.frame = ttk.Frame(self.right_frame)
+            self.frame.grid(row=2, column=0, sticky="ew", pady=10)
+            self.search_entry = ttk.Entry(self.frame, width=74)
+            self.search_button = ttk.Button(self.frame, width=15, text="Search", command=self.search_text)
+            self.frame.grid_columnconfigure(0, weight=1)
+            self.search_entry.grid(row=0, column=0, sticky="w", padx=5, ipadx=10)
+            self.search_button.grid(row=0, column=1, sticky="e", padx=5, ipadx=10)
+            createToolTip(self.search_entry, "Enter text to search")
+            createToolTip(self.search_button, "Click to search")
+
+            self.open_button = ttk.Button(self.left_frame, text="Open File", command=lambda: threading.Thread(target=self.open_file, args=(self.loading_animation(),)).start())
             self.open_button.grid(row=0, column=0, sticky="ew", pady=10)
             createToolTip(self.open_button, "Click to open a file")
 
-            # 在左侧框架中创建一个保存文本按钮
             self.save_button = ttk.Button(self.left_frame, text="Save Text", command=self.save_file)
             self.save_button.grid(row=1, column=0, sticky="ew", pady=10)
             createToolTip(self.save_button, "Click to save the text")
 
-            # 在左侧框架中创建一个复制文本按钮
             self.copy_button = ttk.Button(self.left_frame, text="Copy Text", command=self.copy_text)
             self.copy_button.grid(row=2, column=0, sticky="ew", pady=10)
             createToolTip(self.copy_button, "Click to copy the text")
 
-            # 在左侧框架中创建一个清空并复制到剪贴板按钮
-            self.clear_copy_button = ttk.Button(self.left_frame, text="Clear and Copy to Clipboard", command=self.clear_and_copy_to_clipboard)
-            self.clear_copy_button.grid(row=3, column=0, sticky="ew", pady=10)
-            createToolTip(self.clear_copy_button, "Clear the text box and copy its contents to clipboard")
-
-            # 在左侧框架中创建一个清空文本按钮
             self.clear_button = ttk.Button(self.left_frame, text="Clear Text", command=self.clear_text)
-            self.clear_button.grid(row=4, column=0, sticky="ew", pady=10)
+            self.clear_button.grid(row=3, column=0, sticky="ew", pady=10)
             createToolTip(self.clear_button, "Clear the text box")
 
-            # 在左侧框架中创建一个获取网页内容按钮
             self.fetch_button = ttk.Button(self.left_frame, text="Fetch Web Content", command=self.fetch_web_content)
-            self.fetch_button.grid(row=5, column=0, sticky="ew", pady=10)
+            self.fetch_button.grid(row=4, column=0, sticky="ew", pady=10)
             createToolTip(self.fetch_button, "Click to fetch web content")
 
-            # 在左侧框架中创建一个发送反馈按钮
+            self.clear_copy_button = ttk.Button(self.left_frame, text="Clear and Copy to Clipboard", command=self.clear_and_copy_to_clipboard)
+            self.clear_copy_button.grid(row=5, column=0, sticky="ew", pady=10)
+            createToolTip(self.clear_copy_button, "Clear the text box and copy its contents to clipboard")
+
             self.feedback_button = ttk.Button(self.left_frame, text="Send Feedback", command=self.open_feedback_link)
-            self.feedback_button.grid(row=6, column=0, sticky="ew", pady=10)
+            self.feedback_button.grid(row=7, column=0, sticky="ew", pady=10)
             createToolTip(self.feedback_button, "Click to send feedback")
 
-            # 在左侧框架中创建一个查看快捷键按钮
             self.shortcuts_button = ttk.Button(self.left_frame, text="View Shortcuts", command=self.view_shortcuts)
-            self.shortcuts_button.grid(row=7, column=0, sticky="ew", pady=10)
+            self.shortcuts_button.grid(row=6, column=0, sticky="ew", pady=10)
             createToolTip(self.shortcuts_button, "Click to view all shortcuts")
 
-            # 设置主框架的网格权重，使其能够自适应窗口大小
             self.main_frame.columnconfigure(1, weight=1)
             self.main_frame.rowconfigure(0, weight=1)
 
-            # 设置右侧框架的网格权重，使其能够自适应窗口大小
             self.right_frame.columnconfigure(0, weight=1)
             self.right_frame.rowconfigure(0, weight=1)
 
-            # 绑定一些快捷键到窗口
             self.master.bind('<Control-o>', lambda event: self.open_file())
             self.master.bind('<Control-s>', lambda event: self.save_file())
             self.master.bind('<Control-c>', lambda event: self.copy_text())
@@ -132,12 +126,24 @@ class App(TKMT.ThemedTKinterFrame):
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 
-    def open_file(self):
+    def loading_animation(self):
+        loading_window = tk.Toplevel(self.master)
+        loading_window.title("Loading...")
+        loading_window.resizable(False, False)
+        loading_window.geometry("300x100")
+        progressbar = ttk.Progressbar(loading_window, mode="indeterminate")
+        progressbar.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        loading_label = ttk.Label(loading_window, text="Loading file, please wait...")
+        loading_label.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        progressbar.start()
+        return loading_window
+
+    def open_file(self, loading_window=None):
         try:
             file_path = filedialog.askopenfilename(filetypes=[('Text Documents', '*.txt *.docx *.doc *.xlsx *.xls *.pdf *.csv')])
             if file_path:
                 if file_path.endswith('.txt'):
-                    with open(file_path, 'r') as f:
+                    with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
                         text = f.read()
 
                 elif file_path.endswith('.doc') or file_path.endswith('.docx'):
@@ -168,13 +174,12 @@ class App(TKMT.ThemedTKinterFrame):
                     with open(file_path, 'r', encoding='utf-8') as f:
                         reader = csv.reader(f)
                         text = '\n'.join([' '.join(row) for row in reader])
-                    
-                else:
-                    return
-                    
-                self.text_input.delete('1.0', tk.END)
-                self.text_input.insert(tk.END, text)
+
+                self.text_input.delete(1.0, "end")
+                self.text_input.insert(1.0, text)
                 self.count_words()
+                if loading_window:
+                    loading_window.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 
@@ -190,6 +195,25 @@ class App(TKMT.ThemedTKinterFrame):
                 self.count_words()
             except Exception as e:
                 messagebox.showerror("Error", f"An error occurred: {e}")
+
+    def search_text(self):
+        try:
+            search_text = self.search_entry.get()
+            if search_text:
+                start_pos = "1.0"
+                end_pos = tk.END
+                self.text_input.tag_remove("search", "1.0", tk.END)
+                while True:
+                    start_pos = self.text_input.search(search_text, start_pos, stopindex=end_pos, nocase=True)
+                    if not start_pos:
+                        break
+                    end_pos = f"{start_pos}+{len(search_text)}c"
+                    self.text_input.tag_add("search", start_pos, end_pos)
+                    self.text_input.see(start_pos)
+                    start_pos = end_pos
+                self.text_input.tag_config("search", background="yellow", foreground="black")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
 
     def count_words(self, event=None):
         try:
@@ -288,25 +312,37 @@ class App(TKMT.ThemedTKinterFrame):
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 
+    def back_to_main_page(self):
+        try:
+            self.right_frame.grid()
+
+            if hasattr(self, 'shortcuts_frame'):
+                self.shortcuts_frame.destroy()
+                
+            self.shortcuts_button.config(text="View Shortcuts", command=self.view_shortcuts)
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+
     def view_shortcuts(self):
         try:
-            shortcuts_info = """
-            Shortcuts:
-            - Open File: Ctrl + O
-            - Save Text: Ctrl + S
-            - Copy Text: Ctrl + C
-            - Clear Text: Ctrl + X
-            - Fetch Web Content: Ctrl + F
-            - Send Feedback: Ctrl + E
-            """
+            shortcuts_info = (
+                "Keyboard Shortcuts:\n"
+                "Ctrl + O: Open File\n"
+                "Ctrl + S: Save Text\n"
+                "Ctrl + C: Copy Text\n"
+                "Ctrl + X: Clear Text\n"
+                "Ctrl + F: Fetch Web Content\n"
+                "Ctrl + E: Send Feedback"
+            )
+            self.shortcuts_frame = ttk.Frame(self.main_frame)
+            self.shortcuts_frame.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
 
-            shortcuts_window = tk.Toplevel(self.master)
-            shortcuts_window.title("Shortcuts")
-            shortcuts_window.resizable(False, False)
+            self.right_frame.grid_remove()
 
-            label = ttk.Label(shortcuts_window, text=shortcuts_info)
-            label.grid(row=0, column=0, padx=10, pady=10)
+            self.shortcuts_button.config(text="Back to Main Page", command=self.back_to_main_page)
 
+            self.shortcuts_label = ttk.Label(self.shortcuts_frame, text=shortcuts_info)
+            self.shortcuts_label.grid(padx=10, pady=10)
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 
